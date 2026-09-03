@@ -31,6 +31,7 @@
 
     <section id="rideScreen" class="screen hidden">
       <div class="map-wrap"><div id="map"></div></div>
+      <div class="follow-banner hidden" id="followBanner">ROUTE WIRD ABGEFAHREN</div>
       <div class="stats">
         <div><span>Zeit</span><strong id="time">00:00:00</strong></div>
         <div><span>Distanz</span><strong id="distance">0.00 km</strong></div>
@@ -41,10 +42,11 @@
 
     <section id="routesScreen" class="screen hidden">
       <div class="section-head"><button class="back" id="backHome">‹</button><h2>Meine Routen</h2></div>
+      <p class="route-hint">Wähle eine gespeicherte Route aus.</p>
       <div id="routeList" class="route-list"></div>
     </section>
 
-    <footer>E-TRACK V0.2 · BETA</footer>
+    <footer>E-TRACK V0.3 · BETA</footer>
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

@@ -1,23 +1,19 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#080808">
-  <meta name="description" content="E-TRACK – Scooter GPS Tracking">
-  <title>E-TRACK</title>
-  <link rel="stylesheet" href="style-v11.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#070707"><meta name="description" content="E-TRACK – Scooter GPS Tracking"><title>E-TRACK</title>
+  <link rel="stylesheet" href="style-v13.css"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
-<body>
-  <main class="app">
-    <header class="topbar"><div class="brand"><div class="logo-mark">E</div><div><h1>E-TRACK</h1><p>RIDE. TRACK. REPEAT.</p></div></div><button class="icon-btn" id="settings" aria-label="Einstellungen">⚙</button></header>
-    <section id="homeScreen" class="screen"><section class="hero-card"><div class="gps-label"><span class="status-dot"></span><span id="gpsStatus">GPS BEREIT</span></div><h2>Bereit für die nächste Fahrt?</h2><p>Zeichne deine Strecke live auf und speichere sie für später.</p></section><button class="primary" id="startRide">🛴 Fahrt starten</button><button class="secondary" id="routes">Meine Routen</button></section>
-    <section id="rideScreen" class="screen hidden"><div class="map-wrap"><div id="map"></div></div><div class="follow-banner hidden" id="followBanner">ROUTE WIRD ABGEFAHREN</div><div class="route-status hidden" id="routeStatus">ROUTE: –</div><div class="stats"><div><span>Zeit</span><strong id="time">00:00:00</strong></div><div><span>Distanz</span><strong id="distance">0.00 km</strong></div><div><span>GPS</span><strong id="accuracy">–</strong></div><div><span>Tempo</span><strong id="speed">0 km/h</strong></div><div><span>Ø Tempo</span><strong id="avgSpeed">0 km/h</strong></div><div><span>Max.</span><strong id="maxSpeed">0 km/h</strong></div></div><button class="primary stop" id="stopRide">Fahrt beenden</button></section>
-    <section id="routesScreen" class="screen hidden"><div class="section-head"><button class="back" id="backHome">‹</button><h2>Meine Routen</h2></div><p class="route-hint">Gespeicherte Fahrten auswählen oder verwalten.</p><div id="routeList" class="route-list"></div></section>
-    <div id="settingsPanel" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><div class="modal-head"><h2>Einstellungen</h2><button class="back" id="closeSettings">×</button></div><label class="setting-row"><span>Auto-Zentrierung</span><input type="checkbox" id="autoCenter" checked></label><label class="setting-row"><span>Hohe GPS-Genauigkeit</span><input type="checkbox" id="highAccuracy" checked></label><button class="secondary danger" id="deleteData">Alle gespeicherten Routen löschen</button></div></div>
-    <footer>E-TRACK V1.1 · BETA</footer>
-  </main>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="app-v11.js"></script>
-</body>
-</html>
+<body><main class="app">
+<header class="topbar"><div class="brand"><div class="logo-mark">E</div><div><h1>E-TRACK</h1><p>RIDE. TRACK. REPEAT.</p></div></div><button class="icon-btn" id="settings" aria-label="Einstellungen">⚙</button></header>
+<section id="homeScreen" class="screen"><section class="hero-card"><div class="gps-label"><span class="status-dot"></span><span id="gpsStatus">GPS BEREIT</span></div><h2>Bereit für die nächste Fahrt?</h2><p>Tracke deine Strecke, speichere sie und fahre sie später wieder ab.</p></section><button class="primary" id="startRide">🛴 Fahrt starten</button><button class="secondary" id="routes">🗺️ Meine Routen</button></section>
+<section id="rideScreen" class="screen hidden"><div class="map-wrap"><div id="map"></div></div><div class="follow-banner hidden" id="followBanner">ROUTE WIRD ABGEFAHREN</div><div class="route-status hidden" id="routeStatus">ROUTE: –</div><div class="stats"><div><span>Zeit</span><strong id="time">00:00:00</strong></div><div><span>Distanz</span><strong id="distance">0.00 km</strong></div><div><span>GPS</span><strong id="accuracy">–</strong></div><div><span>Tempo</span><strong id="speed">0.0 km/h</strong></div><div><span>Ø Tempo</span><strong id="avgSpeed">0.0 km/h</strong></div><div><span>Max.</span><strong id="maxSpeed">0.0 km/h</strong></div></div><button class="secondary" id="recenter">◎ Zu meinem Standort</button><button class="primary stop" id="stopRide">Fahrt beenden</button></section>
+<section id="routesScreen" class="screen hidden"><div class="section-head"><button class="back" id="backHome">‹</button><h2>Meine Routen</h2></div><p class="route-hint">Gespeicherte Fahrten auswählen oder verwalten.</p><div id="routeList" class="route-list"></div></section>
+<div id="settingsPanel" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><div class="modal-head"><h2>Einstellungen</h2><button class="back" id="closeSettings">×</button></div>
+<label class="setting-row"><span>Auto-Zentrierung</span><input type="checkbox" id="autoCenter" checked></label><label class="setting-row"><span>Hohe GPS-Genauigkeit</span><input type="checkbox" id="highAccuracy" checked></label><label class="setting-row"><span>Automatisch speichern</span><input type="checkbox" id="autoSave" checked></label>
+<label class="setting-range"><span><b>GPS-Filter</b><b id="maxAccuracyValue">100 m</b></span><input type="range" id="maxAccuracy" min="20" max="300" step="10" value="100"></label>
+<label class="setting-range"><span><b>Tracking-Intervall</b><b id="trackingIntervalValue">1000 ms</b></span><input type="range" id="trackingInterval" min="500" max="5000" step="500" value="1000"></label>
+<button class="secondary" id="resetSettings">↺ Einstellungen zurücksetzen</button><button class="secondary danger" id="deleteData">🗑️ Alle gespeicherten Routen löschen</button><p style="color:#666;font-size:10px;text-align:center;margin-top:14px" id="versionInfo">E-TRACK V1.3</p>
+</div></div>
+<footer>E-TRACK V1.3 · BETA</footer></main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="app-v13.js"></script></body></html>

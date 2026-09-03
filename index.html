@@ -18,51 +18,20 @@
       </div>
       <button class="icon-btn" id="settings" aria-label="Einstellungen">⚙</button>
     </header>
-
     <section id="homeScreen" class="screen">
-      <section class="hero-card">
-        <div class="gps-label"><span class="status-dot"></span><span id="gpsStatus">GPS BEREIT</span></div>
-        <h2>Bereit für die nächste Fahrt?</h2>
-        <p>Zeichne deine Strecke live auf und speichere sie für später.</p>
-      </section>
-      <button class="primary" id="startRide">🛴 Fahrt starten</button>
-      <button class="secondary" id="routes">Meine Routen</button>
+      <section class="hero-card"><div class="gps-label"><span class="status-dot"></span><span id="gpsStatus">GPS BEREIT</span></div><h2>Bereit für die nächste Fahrt?</h2><p>Zeichne deine Strecke live auf und speichere sie für später.</p></section>
+      <button class="primary" id="startRide">🛴 Fahrt starten</button><button class="secondary" id="routes">Meine Routen</button>
     </section>
-
     <section id="rideScreen" class="screen hidden">
       <div class="map-wrap"><div id="map"></div></div>
-      <div class="follow-banner hidden" id="followBanner">ROUTE WIRD ABGEFAHREN</div>
-      <div class="route-status hidden" id="routeStatus">ROUTE: –</div>
-      <div class="stats">
-        <div><span>Zeit</span><strong id="time">00:00:00</strong></div>
-        <div><span>Distanz</span><strong id="distance">0.00 km</strong></div>
-        <div><span>GPS</span><strong id="accuracy">–</strong></div>
-        <div><span>Tempo</span><strong id="speed">0 km/h</strong></div>
-        <div><span>Ø Tempo</span><strong id="avgSpeed">0 km/h</strong></div>
-        <div><span>Max.</span><strong id="maxSpeed">0 km/h</strong></div>
-      </div>
+      <div class="follow-banner hidden" id="followBanner">ROUTE WIRD ABGEFAHREN</div><div class="route-status hidden" id="routeStatus">ROUTE: –</div>
+      <div class="stats"><div><span>Zeit</span><strong id="time">00:00:00</strong></div><div><span>Distanz</span><strong id="distance">0.00 km</strong></div><div><span>GPS</span><strong id="accuracy">–</strong></div><div><span>Tempo</span><strong id="speed">0 km/h</strong></div><div><span>Ø Tempo</span><strong id="avgSpeed">0 km/h</strong></div><div><span>Max.</span><strong id="maxSpeed">0 km/h</strong></div></div>
       <button class="primary stop" id="stopRide">Fahrt beenden</button>
     </section>
-
-    <section id="routesScreen" class="screen hidden">
-      <div class="section-head"><button class="back" id="backHome">‹</button><h2>Meine Routen</h2></div>
-      <p class="route-hint">Gespeicherte Fahrten auswählen oder verwalten.</p>
-      <div id="routeList" class="route-list"></div>
-    </section>
-
-    <div id="settingsPanel" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-      <div class="modal-card">
-        <div class="modal-head"><h2 id="settingsTitle">Einstellungen</h2><button class="back" id="closeSettings">×</button></div>
-        <label class="setting-row"><span>Auto-Zentrierung</span><input type="checkbox" id="autoCenter" checked></label>
-        <label class="setting-row"><span>Hohe GPS-Genauigkeit</span><input type="checkbox" id="highAccuracy" checked></label>
-        <button class="secondary danger" id="deleteData">Alle gespeicherten Routen löschen</button>
-      </div>
-    </div>
-
+    <section id="routesScreen" class="screen hidden"><div class="section-head"><button class="back" id="backHome">‹</button><h2>Meine Routen</h2></div><p class="route-hint">Gespeicherte Fahrten auswählen oder verwalten.</p><div id="routeList" class="route-list"></div></section>
+    <div id="settingsPanel" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><div class="modal-head"><h2>Einstellungen</h2><button class="back" id="closeSettings">×</button></div><label class="setting-row"><span>Auto-Zentrierung</span><input type="checkbox" id="autoCenter" checked></label><label class="setting-row"><span>Hohe GPS-Genauigkeit</span><input type="checkbox" id="highAccuracy" checked></label><button class="secondary danger" id="deleteData">Alle gespeicherten Routen löschen</button></div></div>
     <footer>E-TRACK V1.1 · BETA</footer>
   </main>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="app-v11.js"></script>
 </body>
 </html>

@@ -1,11 +1,13 @@
 let map = null;
 let marker = null;
 let routeLine = null;
+let savedRouteLine = null;
 let watchId = null;
 let points = [];
 let startedAt = null;
 let timerId = null;
 let distanceMeters = 0;
+let followingRoute = null;
 
 const $ = (id) => document.getElementById(id);
 const home = $('homeScreen');
@@ -43,8 +45,6 @@ function initMap(lat, lon) {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
     routeLine = L.polyline([], { color: '#ff3030', weight: 5, opacity: 0.9 }).addTo(map);
-  } else {
-    map.setView([lat, lon], 17);
   }
 }
 
@@ -73,6 +73,8 @@ function startTracking() {
     return;
   }
 
+  followingRoute = null;
+  $('followBanner').classList.add('hidden');
   points = [];
   distanceMeters = 0;
   startedAt = Date.now();
@@ -85,6 +87,11 @@ function startTracking() {
   navigator.geolocation.getCurrentPosition((position) => {
     const { latitude, longitude } = position.coords;
     initMap(latitude, longitude);
+    routeLine.setLatLngs([]);
+    if (savedRouteLine) {
+      map.removeLayer(savedRouteLine);
+      savedRouteLine = null;
+    }
     marker = L.circleMarker([latitude, longitude], {
       radius: 8, color: '#ffffff', weight: 3, fillColor: '#ff3030', fillOpacity: 1
     }).addTo(map);
@@ -100,6 +107,66 @@ function startTracking() {
   timerId = setInterval(() => $('time').textContent = formatTime(Date.now() - startedAt), 1000);
 }
 
+function startFollowing(route) {
+  if (!navigator.geolocation) {
+    alert('GPS wird von diesem Browser nicht unterstützt.');
+    return;
+  }
+  if (!route.points || route.points.length < 2) {
+    alert('Diese Route enthält keine gültigen GPS-Punkte.');
+    return;
+  }
+
+  followingRoute = route;
+  points = [];
+  distanceMeters = 0;
+  startedAt = Date.now();
+  $('time').textContent = '00:00:00';
+  $('distance').textContent = '0.00 km';
+  $('accuracy').textContent = '…';
+  $('gpsStatus').textContent = 'GPS AKTIV';
+  $('followBanner').classList.remove('hidden');
+  show(ride);
+
+  navigator.geolocation.getCurrentPosition((position) => {
+    const { latitude, longitude } = position.coords;
+    initMap(latitude, longitude);
+    routeLine.setLatLngs([]);
+    if (savedRouteLine) map.removeLayer(savedRouteLine);
+    savedRouteLine = L.polyline(route.points, {
+      color: '#ffffff', weight: 5, opacity: 0.55, dashArray: '8 9'
+    }).addTo(map);
+
+    marker = L.circleMarker([latitude, longitude], {
+      radius: 8, color: '#ffffff', weight: 3, fillColor: '#ff3030', fillOpacity: 1
+    }).addTo(map);
+    map.fitBounds(savedRouteLine.getBounds(), { padding: [24, 24] });
+    updateFollowPosition(position);
+
+    watchId = navigator.geolocation.watchPosition(updateFollowPosition, gpsError, {
+      enableHighAccuracy: true,
+      maximumAge: 1000,
+      timeout: 10000
+    });
+  }, gpsError, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+
+  timerId = setInterval(() => $('time').textContent = formatTime(Date.now() - startedAt), 1000);
+}
+
+function updateFollowPosition(position) {
+  const current = [position.coords.latitude, position.coords.longitude];
+  const accuracy = Math.round(position.coords.accuracy || 0);
+  if (points.length) {
+    const segment = distanceBetween(points[points.length - 1], current);
+    if (segment >= 2 && segment < 100) distanceMeters += segment;
+  }
+  points.push(current);
+  marker.setLatLng(current);
+  map.setView(current, Math.max(map.getZoom(), 16), { animate: true });
+  $('distance').textContent = `${(distanceMeters / 1000).toFixed(2)} km`;
+  $('accuracy').textContent = `±${accuracy} m`;
+}
+
 function gpsError() {
   $('gpsStatus').textContent = 'GPS FEHLER';
   alert('GPS konnte nicht bestimmt werden. Bitte Standortzugriff erlauben.');
@@ -111,7 +178,7 @@ function stopTracking() {
   watchId = null;
   timerId = null;
 
-  if (points.length >= 2) {
+  if (!followingRoute && points.length >= 2) {
     const routes = JSON.parse(localStorage.getItem('e-track-routes') || '[]');
     routes.unshift({
       name: `Fahrt ${new Date().toLocaleDateString('de-DE')}`,
@@ -122,6 +189,13 @@ function stopTracking() {
     });
     localStorage.setItem('e-track-routes', JSON.stringify(routes));
   }
+
+  if (savedRouteLine) {
+    map.removeLayer(savedRouteLine);
+    savedRouteLine = null;
+  }
+  followingRoute = null;
+  $('followBanner').classList.add('hidden');
   renderRoutes();
   show(routesScreen);
 }
@@ -137,11 +211,19 @@ function renderRoutes() {
     <div class="route-item">
       <strong>${escapeHtml(r.name)}</strong>
       <span>${(r.distance / 1000).toFixed(2)} km · ${formatTime(r.duration)}</span>
+      <button type="button" data-route="${i}">🧭 Route abfahren</button>
     </div>`).join('');
+
+  list.querySelectorAll('[data-route]').forEach(button => {
+    button.addEventListener('click', () => {
+      const route = routes[Number(button.dataset.route)];
+      startFollowing(route);
+    });
+  });
 }
 
 function escapeHtml(text) {
-  return text.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  return String(text).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 }
 
 $('startRide').addEventListener('click', startTracking);

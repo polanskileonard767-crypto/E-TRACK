@@ -1,0 +1,20 @@
+/* E-TRACK V16 — full-screen saved-route navigation surface */
+#rideScreen.navigation-active{position:relative;min-height:calc(100dvh - 72px);padding:0!important;overflow:hidden}
+#rideScreen.navigation-active .map-wrap{position:relative;height:calc(100dvh - 105px);min-height:420px;margin:0!important;border-radius:0;border:0;box-shadow:none}
+#rideScreen.navigation-active #map{height:100%!important;border-radius:0}
+#rideScreen.navigation-active .nav-panel{position:absolute;top:10px;left:10px;right:10px;margin:0;z-index:1200;max-width:560px}
+#rideScreen.navigation-active .follow-banner,#rideScreen.navigation-active .route-status,#rideScreen.navigation-active .stats{display:none!important}
+#rideScreen.navigation-active #recenter{position:absolute;right:14px;top:128px;z-index:1201;width:48px;height:48px;padding:0;border-radius:50%;background:#11151be8;border:1px solid #ffffff22;box-shadow:0 8px 28px #000b;backdrop-filter:blur(12px);font-size:0}
+#rideScreen.navigation-active #recenter:after{content:'◎';font-size:24px;color:#fff}
+#rideScreen.navigation-active #stopRide{position:absolute;left:14px;right:14px;bottom:14px;z-index:1201;height:48px;margin:0;border-radius:15px;box-shadow:0 10px 35px #000b}
+.saved-nav-panel{border:1px solid #ffffff1c!important;box-shadow:0 16px 45px #000b!important;backdrop-filter:blur(16px)}
+.saved-nav-panel .nav-card-top{background:linear-gradient(145deg,#191c23f2,#0d0f13f2)}
+.saved-nav-panel .turn-icon{background:#ff30401c;border-color:#ff304055;box-shadow:0 0 25px #ff304015}
+.saved-nav-panel .nav-progress{height:4px}
+.saved-nav-panel .nav-progress i{box-shadow:0 0 10px #ff304066}
+.saved-nav-panel.arrived .turn-icon{animation:arrivalPulse 1.1s ease-in-out infinite alternate}
+@keyframes arrivalPulse{from{transform:scale(1)}to{transform:scale(1.08);box-shadow:0 0 24px #55d97933}}
+#rideScreen.navigation-active .leaflet-control-zoom{display:none}
+#rideScreen.navigation-active .leaflet-control-attribution{background:#080a0ccc;color:#777;border-radius:7px 0 0 0;padding:2px 5px}
+#rideScreen.navigation-active .leaflet-control-attribution a{color:#aaa}
+@media(max-width:600px){#rideScreen.navigation-active .nav-panel{top:8px;left:8px;right:8px}.saved-nav-panel .nav-main strong{font-size:17px}#rideScreen.navigation-active #recenter{top:132px;right:12px}}

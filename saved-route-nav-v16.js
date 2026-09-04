@@ -1,126 +1,66 @@
 // E-TRACK V16 — Navigation on previously recorded rides. No online route calculation.
 (function(){
-  let navRoute=null, navWatchId=null, navLine=null, navProgress=null, navDestinationMarker=null;
+  let navRoute=null, navWatchId=null, navLine=null, navHalo=null, navProgress=null, navProgressHalo=null, navDestinationMarker=null;
   let lastNearest=0;
-
   const $=id=>document.getElementById(id);
   const getMap=()=>{try{return map}catch{return null}};
   const distance=(a,b)=>{const R=6371000,p=Math.PI/180,la=a[0]*p,lb=b[0]*p,dl=(b[0]-a[0])*p,do_=(b[1]-a[1])*p,x=Math.sin(dl/2)**2+Math.cos(la)*Math.cos(lb)*Math.sin(do_/2)**2;return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))};
   const fmt=m=>m>=1000?(m/1000).toFixed(m>=10000?0:1)+' km':Math.max(0,Math.round(m))+' m';
-  const esc=t=>String(t??'').replace(/[&<>\'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]));
-
   function navUi(){
-    const ride=$('rideScreen');
-    if(!ride)return;
-    let panel=$('navPanel');
-    if(!panel){panel=document.createElement('div');panel.id='navPanel';ride.prepend(panel)}
+    const ride=$('rideScreen');if(!ride)return;
+    let panel=$('navPanel');if(!panel){panel=document.createElement('div');panel.id='navPanel';ride.prepend(panel)}
     panel.className='nav-panel hidden saved-nav-panel';
     panel.innerHTML='<div class="nav-card-top"><div class="turn-icon">➤</div><div class="nav-main"><span class="nav-eyebrow">STRECKEN-NAVIGATION</span><strong id="navInstruction">Gespeicherte Strecke</strong><span id="navStreet" class="nav-road">Route wird geladen…</span></div><button id="navStop" class="nav-stop" aria-label="Navigation beenden">×</button></div><div class="nav-bottom"><span><b id="navRemaining">–</b><small>verbleibend</small></span><span><b id="navProgressText">0 %</b><small>fortschritt</small></span><span><b id="navDeviation">–</b><small>abstand</small></span></div><div class="nav-progress"><i id="navProgress"></i></div>';
     $('navStop').onclick=stopNavigation;
   }
-
   function nearest(here){
-    const pts=navRoute?.points||[];
-    if(!pts.length)return {index:0,offset:0,distance:Infinity};
-    let best=Infinity,index=lastNearest;
-    const from=Math.max(0,lastNearest-35),to=Math.min(pts.length-1,lastNearest+160);
+    const pts=navRoute?.points||[];if(!pts.length)return {index:0,distance:Infinity};
+    let best=Infinity,index=lastNearest;const from=Math.max(0,lastNearest-35),to=Math.min(pts.length-1,lastNearest+160);
     for(let i=from;i<=to;i++){const d=distance(here,pts[i]);if(d<best){best=d;index=i}}
-    if(best>80){
-      for(let i=0;i<pts.length;i++){const d=distance(here,pts[i]);if(d<best){best=d;index=i}}
-    }
-    lastNearest=index;
-    return {index,distance:best};
+    if(best>80){for(let i=0;i<pts.length;i++){const d=distance(here,pts[i]);if(d<best){best=d;index=i}}}
+    lastNearest=index;return {index,distance:best};
   }
-
-  function cumulativeFrom(index){
-    const pts=navRoute?.points||[];let total=0;
-    for(let i=Math.max(0,index);i<pts.length-1;i++)total+=distance(pts[i],pts[i+1]);
-    return total;
-  }
-
+  function cumulativeFrom(index){const pts=navRoute?.points||[];let total=0;for(let i=Math.max(0,index);i<pts.length-1;i++)total+=distance(pts[i],pts[i+1]);return total}
   function update(here){
-    if(!navRoute||!here)return;
-    const pts=navRoute.points||[];if(pts.length<2)return;
-    const n=nearest(here),remaining=cumulativeFrom(n.index),total=navRoute.distance||cumulativeFrom(0);
-    const progress=Math.min(100,Math.max(0,(1-remaining/Math.max(1,total))*100));
-    const arrived=distance(here,pts[pts.length-1])<25 || progress>99.7;
-    const panel=$('navPanel');if(panel)panel.classList.toggle('arrived',arrived);
+    if(!navRoute||!here)return;const pts=navRoute.points||[];if(pts.length<2)return;
+    const n=nearest(here),remaining=cumulativeFrom(n.index),total=navRoute.distance||cumulativeFrom(0),progress=Math.min(100,Math.max(0,(1-remaining/Math.max(1,total))*100));
+    const arrived=distance(here,pts[pts.length-1])<25||progress>99.7,panel=$('navPanel');if(panel)panel.classList.toggle('arrived',arrived);
     const inst=$('navInstruction');if(inst)inst.textContent=arrived?'Strecke abgeschlossen':n.distance>45?'Zurück zur Strecke':'Strecke folgen';
     const street=$('navStreet');if(street)street.textContent=navRoute.name||'Gespeicherte Fahrt';
     const rem=$('navRemaining');if(rem)rem.textContent=fmt(arrived?0:remaining);
     const prog=$('navProgress');if(prog)prog.style.width=progress+'%';
     const pt=$('navProgressText');if(pt)pt.textContent=Math.round(progress)+' %';
     const dev=$('navDeviation');if(dev)dev.textContent=fmt(n.distance);
-    if(navProgress)navProgress.setLatLngs(pts.slice(0,Math.max(1,n.index+1)));
-    if(arrived){stopWatch();if($('navInstruction'))$('navInstruction').textContent='Strecke abgeschlossen'}
+    if(navProgress){navProgress.setLatLngs(pts.slice(0,Math.max(1,n.index+1)));navProgress.bringToFront()}
+    if(arrived)stopWatch();
   }
-
-  function startWatch(){
-    stopWatch();
-    navWatchId=navigator.geolocation.watchPosition(p=>{
-      if(!p?.coords)return;
-      const here=[p.coords.latitude,p.coords.longitude];
-      try{update(here)}catch{}
-    },()=>{}, {enableHighAccuracy:true,maximumAge:0,timeout:20000});
-  }
+  function startWatch(){stopWatch();navWatchId=navigator.geolocation.watchPosition(p=>{if(!p?.coords)return;try{update([p.coords.latitude,p.coords.longitude])}catch{}},()=>{},{enableHighAccuracy:true,maximumAge:0,timeout:20000})}
   function stopWatch(){if(navWatchId!==null)navigator.geolocation.clearWatch(navWatchId);navWatchId=null}
-
-  function clearLayers(){
-    const m=getMap();
-    if(m){if(navLine)m.removeLayer(navLine);if(navProgress)m.removeLayer(navProgress);if(navDestinationMarker)m.removeLayer(navDestinationMarker)}
-    navLine=navProgress=navDestinationMarker=null;
-  }
-
+  function clearLayers(){const m=getMap();if(m){[navLine,navHalo,navProgress,navProgressHalo,navDestinationMarker].forEach(x=>{if(x)m.removeLayer(x)})}navLine=navHalo=navProgress=navProgressHalo=navDestinationMarker=null}
   function startSaved(route){
     if(!route?.points||route.points.length<2){alert('Diese Fahrt enthält keine gültige Strecke.');return}
     if(!navigator.geolocation){alert('GPS wird von diesem Browser nicht unterstützt.');return}
     navRoute=route;lastNearest=0;
-    const ride=$('rideScreen');
     if(typeof window.startTracking==='function')window.startTracking();
     setTimeout(()=>{
-      const m=getMap();if(!m)return;
-      clearLayers();
-      navUi();
-      $('navPanel').classList.remove('hidden');
+      const m=getMap();if(!m)return;clearLayers();navUi();$('navPanel').classList.remove('hidden');
       if($('followBanner')){$('followBanner').textContent='GESPEICHERTE STRECKE · NAVIGATION';$('followBanner').classList.remove('hidden')}
-      navLine=L.polyline(route.points,{color:'#ffffff',weight:11,opacity:.75,lineCap:'round',lineJoin:'round'}).addTo(m);
+      navHalo=L.polyline(route.points,{color:'#ffffff',weight:12,opacity:.82,lineCap:'round',lineJoin:'round'}).addTo(m);
       navLine=L.polyline(route.points,{color:'#ff3040',weight:7,opacity:1,lineCap:'round',lineJoin:'round'}).addTo(m);
-      navProgress=L.polyline([route.points[0]],{color:'#fff',weight:10,opacity:.95,lineCap:'round',lineJoin:'round'}).addTo(m);
+      navProgressHalo=L.polyline([route.points[0]],{color:'#ffffff',weight:11,opacity:.9,lineCap:'round',lineJoin:'round'}).addTo(m);
       navProgress=L.polyline([route.points[0]],{color:'#ff3040',weight:7,opacity:1,lineCap:'round',lineJoin:'round'}).addTo(m);
       navDestinationMarker=L.circleMarker(route.points[route.points.length-1],{radius:9,color:'#fff',weight:3,fillColor:'#ff3040',fillOpacity:1}).addTo(m);
       navDestinationMarker.bindTooltip('Ziel der gespeicherten Strecke');
       m.fitBounds(navLine.getBounds(),{paddingTopLeft:[18,105],paddingBottomRight:[18,110]});
-      navigator.geolocation.getCurrentPosition(p=>update([p.coords.latitude,p.coords.longitude]),()=>{}, {enableHighAccuracy:true,timeout:12000,maximumAge:0});
-      startWatch();
-      ride.classList.add('navigation-active');
-    },250);
+      navigator.geolocation.getCurrentPosition(p=>update([p.coords.latitude,p.coords.longitude]),()=>{},{enableHighAccuracy:true,timeout:12000,maximumAge:0});
+      startWatch();$('rideScreen').classList.add('navigation-active');
+    },400);
   }
-
-  function stopNavigation(){
-    stopWatch();clearLayers();navRoute=null;lastNearest=0;
-    const ride=$('rideScreen');if(ride)ride.classList.remove('navigation-active');
-    if($('navPanel'))$('navPanel').classList.add('hidden');
-    if($('followBanner'))$('followBanner').classList.add('hidden');
-    if(typeof window.stop==='function')window.stop();
-  }
-
+  function stopNavigation(){stopWatch();clearLayers();navRoute=null;lastNearest=0;const ride=$('rideScreen');if(ride)ride.classList.remove('navigation-active');if($('navPanel'))$('navPanel').classList.add('hidden');if($('followBanner'))$('followBanner').classList.add('hidden');if(typeof window.stop==='function')window.stop()}
   function patchRoutes(){
-    const list=$('routeList');if(!list)return;
-    const routes=(()=>{try{return JSON.parse(localStorage.getItem('e-track-routes')||'[]')}catch{return[]}})();
-    list.querySelectorAll('[data-follow]').forEach(b=>{
-      const i=Number(b.dataset.follow),r=routes[i];
-      if(!r)return;
-      b.textContent='🧭 Strecke navigieren';
-      b.onclick=()=>startSaved(r);
-    });
-    const hint=document.querySelector('.route-hint');
-    if(hint)hint.textContent='Deine gefahrene Strecke wird direkt als Navigationslinie verwendet – ohne neue Routenberechnung.';
+    const list=$('routeList');if(!list)return;let routes=[];try{routes=JSON.parse(localStorage.getItem('e-track-routes')||'[]')}catch{}
+    list.querySelectorAll('[data-follow]').forEach(b=>{const i=Number(b.dataset.follow),r=routes[i];if(!r)return;b.textContent='🧭 Strecke navigieren';b.onclick=()=>startSaved(r)});
+    const hint=document.querySelector('.route-hint');if(hint)hint.textContent='Deine gefahrene Strecke wird direkt als Navigationslinie verwendet – ohne neue Routenberechnung.';
   }
-
-  navUi();
-  const originalRender=window.renderRoutes;
-  window.renderRoutes=function(){if(originalRender)originalRender();setTimeout(patchRoutes,0)};
-  setTimeout(patchRoutes,0);
-  document.addEventListener('DOMContentLoaded',()=>{navUi();patchRoutes()});
-  window.addEventListener('beforeunload',stopWatch);
+  navUi();const originalRender=window.renderRoutes;window.renderRoutes=function(){if(originalRender)originalRender();setTimeout(patchRoutes,0)};setTimeout(patchRoutes,0);document.addEventListener('DOMContentLoaded',()=>{navUi();patchRoutes()});window.addEventListener('beforeunload',stopWatch);
 })();
